@@ -11,6 +11,8 @@ FROM node:22-alpine3.21
 
 WORKDIR /app
 
+RUN apk upgrade --no-cache
+
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 COPY --from=builder /app/node_modules ./node_modules

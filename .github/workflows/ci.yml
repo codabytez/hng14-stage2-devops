@@ -187,21 +187,18 @@ jobs:
       - name: Scan API image
         run: |
           trivy image --exit-code 1 --severity CRITICAL \
-            --ignore-unfixed \
             --format sarif --output trivy-api.sarif \
             localhost:5000/api:latest
 
       - name: Scan worker image
         run: |
           trivy image --exit-code 1 --severity CRITICAL \
-            --ignore-unfixed \
             --format sarif --output trivy-worker.sarif \
             localhost:5000/worker:latest
 
       - name: Scan frontend image
         run: |
           trivy image --exit-code 1 --severity CRITICAL \
-            --ignore-unfixed \
             --format sarif --output trivy-frontend.sarif \
             localhost:5000/frontend:latest
 
