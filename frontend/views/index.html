@@ -1,52 +1,74 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Job Dashboard</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; }
-    button { padding: 10px 20px; cursor: pointer; }
-    #result { margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 4px; }
-    #jobs { margin-top: 20px; }
-    .job { padding: 8px; border-bottom: 1px solid #ddd; }
-  </style>
-</head>
-<body>
-  <h1>Job Processor Dashboard</h1>
-  <button onclick="submitJob()">Submit New Job</button>
-  <div id="result"></div>
-  <div id="jobs"></div>
-
-  <script>
-    const jobIds = [];
-
-    async function submitJob() {
-      const res = await fetch('/submit', { method: 'POST' });
-      const data = await res.json();
-      document.getElementById('result').innerText = `Submitted: ${data.job_id}`;
-      jobIds.push(data.job_id);
-      pollJob(data.job_id);
-    }
-
-    async function pollJob(id) {
-      const res = await fetch(`/status/${id}`);
-      const data = await res.json();
-      renderJob(id, data.status);
-      if (data.status !== 'completed') {
-        setTimeout(() => pollJob(id), 2000);
+  <head>
+    <meta charset="UTF-8" />
+    <title>Job Dashboard</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 0 20px;
       }
-    }
-
-    function renderJob(id, status) {
-      let el = document.getElementById(id);
-      if (!el) {
-        el = document.createElement('div');
-        el.className = 'job';
-        el.id = id;
-        document.getElementById('jobs').appendChild(el);
+      button {
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
       }
-      el.innerText = `Job ${id.substring(0, 8)}... — ${status}`;
-    }
-  </script>
-</body>
+      .job {
+        margin: 10px 0;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      .queued {
+        color: orange;
+      }
+      .completed {
+        color: green;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Job Processor Dashboard</h1>
+    <button onclick="submitJob()">Submit New Job</button>
+    <div id="result"></div>
+    <div id="jobs"></div>
+
+    <script>
+      const jobs = {};
+
+      async function submitJob() {
+        const res = await fetch("/submit", { method: "POST" });
+        const data = await res.json();
+        if (data.job_id) {
+          jobs[data.job_id] = "queued";
+          renderJobs();
+          pollJob(data.job_id);
+        }
+      }
+
+      async function pollJob(job_id) {
+        const interval = setInterval(async () => {
+          const res = await fetch(`/status/${job_id}`);
+          const data = await res.json();
+          jobs[job_id] = data.status;
+          renderJobs();
+          if (data.status === "completed") {
+            clearInterval(interval);
+          }
+        }, 2000);
+      }
+
+      function renderJobs() {
+        const container = document.getElementById("jobs");
+        container.innerHTML = Object.entries(jobs)
+          .map(
+            ([id, status]) =>
+              `<div class="job"><strong>${id}</strong>: <span class="${status}">${status}</span></div>`,
+          )
+          .join("");
+      }
+    </script>
+  </body>
 </html>
